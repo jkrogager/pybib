@@ -2,6 +2,7 @@
 
 import sys
 import time
+import copy
 
 from PyQt4 import QtGui  # , QtCore
 import pybtex
@@ -49,6 +50,12 @@ class Window(QtGui.QMainWindow):
         self.searchContent.setStatusTip("Search in the bibliography content")
         self.searchContent.triggered.connect(self.create_search_window)
 
+        self.editEntry = QtGui.QAction(QtGui.QIcon('icons/edit_content-icon.png'),
+                                       "&Edit Current Entry", self)
+        self.editEntry.setShortcut("Ctrl+E")
+        self.editEntry.setStatusTip("Edit the content of the current entry")
+        self.editEntry.triggered.connect(self.create_edit_window)
+
         self.statusBar()
 
         self.mainMenu = self.menuBar()
@@ -59,9 +66,13 @@ class Window(QtGui.QMainWindow):
         self.fileMenu.addAction(exitAction)
         self.searchMenu = self.mainMenu.addMenu("&Search")
         self.searchMenu.addAction(self.searchContent)
+        self.editMenu = self.mainMenu.addMenu("&Edit")
+        self.editMenu.addAction(self.editEntry)
 
+        # Define empty data containers
         self.search_form_fields = dict()
         self.entryID_list = list()
+        self.bib_database = pybtex.database.BibliographyData()
 
         self.home()
 
@@ -92,6 +103,7 @@ class Window(QtGui.QMainWindow):
         self.toolbar.addAction(openFile)
         self.toolbar.addAction(saveFile)
         self.toolbar.addAction(self.searchContent)
+        self.toolbar.addAction(self.editEntry)
 
         # Search Bar for articles in listView
         self.searchBar = QtGui.QLineEdit()
@@ -189,6 +201,9 @@ class Window(QtGui.QMainWindow):
 
     def create_search_window(self):
         self.Spline_dialog = SearchWindow(self)
+
+    def create_edit_window(self):
+        self.editor = EditWindow(self)
 
     def search_content(self):
         matches = list()
@@ -293,12 +308,30 @@ class Window(QtGui.QMainWindow):
 
     def file_save(self):
         name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
-        # entry = self.bib_database.entries_dict['Moller2004']
 
         with open(name, 'w') as bibtex_file:
             self.bib_database.to_file(bibtex_file)
         new_msg = 'Saved current BibTeX database to file: ' + name
         self.statusBar().showMessage(new_msg, 8000)
+
+    def update_entry(self):
+        edit_fields = self.editor.edit_fields
+        entryID = self.editor.original_entry.key
+        for field in edit_fields.keys():
+            if field not in self.editor.original_entry.persons.keys():
+                changed_data = str(edit_fields[field].text())
+                self.bib_database.entries[entryID].fields[field] = changed_data
+            else:
+                changed_data = str(edit_fields[field].text())
+                person_list = changed_data.split(' and ')
+                new_person_list = list()
+                for name in person_list:
+                    person = pybtex.database.Person(name)
+                    new_person_list.append(person)
+                self.bib_database.entries[entryID].persons[field] = new_person_list
+        self.editor.close()
+        ID_as_listViewItem = QtGui.QListWidgetItem(entryID)
+        self.show_entry(ID_as_listViewItem)
 
     def download(self):
         self.completed = 0
@@ -358,6 +391,69 @@ class SearchWindow(QtGui.QDialog):
         self.setLayout(vbox)
 
         self.show()
+
+
+class EditWindow(QtGui.QDialog):
+    def __init__(self, parent=None):
+        super(EditWindow, self).__init__(parent)
+        self.setWindowTitle("Edit Bib Entry")
+        self.save_button = QtGui.QPushButton("Update Entry")
+        self.save_button.clicked.connect(parent.update_entry)
+        self.quit_button = QtGui.QPushButton("Cancel")
+        self.quit_button.clicked.connect(self.close)
+        self.reset_button = QtGui.QPushButton("Recover Original")
+        self.reset_button.clicked.connect(self.recover_entry)
+
+        entryID = str(parent.listView.currentItem().text())
+        self.original_entry = copy.deepcopy(parent.bib_database.entries[entryID])
+        self.edit_fields = dict()
+
+        grid_layout = self.display_all_fields(parent.bib_database.entries[entryID])
+
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(self.save_button)
+        hbox.addWidget(self.quit_button)
+        hbox.addWidget(self.reset_button)
+
+        vbox = QtGui.QVBoxLayout()
+        vbox.addLayout(grid_layout)
+        vbox.addStretch(1)
+        vbox.addLayout(hbox)
+
+        self.setLayout(vbox)
+
+        self.show()
+
+    def display_all_fields(self, bib_entry):
+        fields_in_entry = bib_entry.fields.keys() + bib_entry.persons.keys()
+        # all_fields = formatting.all_bibtex_fields
+        # for field in fields_in_entry:
+        #     if field not in all_fields:
+        #         all_fields.append(field)
+        #
+        grid_layout = QtGui.QGridLayout()
+        # for field in bib_entry.fields.keys():
+        #     if field.lower() not in all_fields:
+        #         all_fields.append(field)
+
+        for row, field in enumerate(fields_in_entry):
+            data = bib_entry.fields[field]
+
+            label = QtGui.QLabel(field.capitalize() + ': ')
+            line_edit = QtGui.QLineEdit(data)
+            self.edit_fields[field] = line_edit
+            grid_layout.addWidget(label, row, 0)
+            grid_layout.addWidget(line_edit, row, 1)
+
+        return grid_layout
+
+    def recover_entry(self):
+        fields_in_entry = self.original_entry.fields.keys()
+        fields_in_entry += self.original_entry.persons.keys()
+        for field in fields_in_entry:
+            orig_data = self.original_entry.fields[field]
+            self.edit_fields[field].clear()
+            self.edit_fields[field].setText(orig_data)
 
 
 def main():

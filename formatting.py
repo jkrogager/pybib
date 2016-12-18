@@ -24,6 +24,32 @@ journal_transform = {'aj': u'AJ',
                      'aplett': u'Astrophys. Lett.'}
 
 
+all_bibtex_fields = [
+    'author',
+    'title',
+    'journal',
+    'volume',
+    'pages',
+    'year',
+    'month',
+    'number',
+    'series',
+    'note',
+    'booktitle',
+    'chapter',
+    'crossref',
+    'editor',
+    'edition',
+    'institution',
+    'publisher',
+    'school',
+    'organization',
+    'address',
+    'annote',
+    'howpublished'
+]
+
+
 def unicode_char_in_string(string):
     try:
         string.encode('ascii')
@@ -36,7 +62,7 @@ def unicode_char_in_string(string):
 def format_editor_list(bib_entry):
     """ Format the list of editors. """
     bibitem = bib_entry.fields
-    editor_list = bibitem['editor'].split('and')
+    editor_list = bibitem['editor'].split(' and ')
     if len(editor_list) > 1:
         editor_id = "(Eds.)"
     else:
@@ -70,7 +96,7 @@ def clean_string(string):
 def format_author_list(bib_entry, Nshow=3, Nmax=8, showAll=False):
     """ Convert the BibTeX name list to real text: """
 
-    author_list = bib_entry.fields['author'].split('and')
+    author_list = bib_entry.fields['author'].split(' and ')
     authors = list()
     for author_field in author_list:
         # Convert LaTeX to Unicode
