@@ -2,7 +2,7 @@
 Experimental GUI for BibTeX management
 
 ## Dependencies
- - PyQt4
+ - [PyQt4](https://riverbankcomputing.com/software/pyqt/intro)
  - [Pybtex](https://pybtex.org/)
 
 ## Description
