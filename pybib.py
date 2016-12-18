@@ -309,7 +309,7 @@ class Window(QtGui.QMainWindow):
     def file_save(self):
         name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
 
-        with open(name, 'w') as bibtex_file:
+        with open(str(name), 'w') as bibtex_file:
             self.bib_database.to_file(bibtex_file)
         new_msg = 'Saved current BibTeX database to file: ' + name
         self.statusBar().showMessage(new_msg, 8000)
