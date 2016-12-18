@@ -2,6 +2,7 @@
 
 import sys
 import time
+import copy
 
 from PyQt4 import QtGui  # , QtCore
 import pybtex
@@ -386,11 +387,13 @@ class EditWindow(QtGui.QDialog):
         self.quit_button = QtGui.QPushButton("Cancel")
         self.quit_button.clicked.connect(self.close)
         self.reset_button = QtGui.QPushButton("Recover Original")
-        # self.reset_button.clicked.connect(self.recover_entry)
+        self.reset_button.clicked.connect(self.recover_entry)
 
-        entryID = str(parent.listView.currentItem())
-        self.original_entry = self.bib_database.entries[entryID]
-        print entryID
+        entryID = str(parent.listView.currentItem().text())
+        self.original_entry = copy.deepcopy(parent.bib_database.entries[entryID])
+        self.edit_fields = dict()
+
+        grid_layout = self.display_all_fields(parent.bib_database.entries[entryID])
 
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.save_button)
@@ -398,12 +401,44 @@ class EditWindow(QtGui.QDialog):
         hbox.addWidget(self.reset_button)
 
         vbox = QtGui.QVBoxLayout()
+        vbox.addLayout(grid_layout)
         vbox.addStretch(1)
         vbox.addLayout(hbox)
 
         self.setLayout(vbox)
 
         self.show()
+
+    def display_all_fields(self, bib_entry):
+        fields_in_entry = bib_entry.fields.keys() + bib_entry.persons.keys()
+        # all_fields = formatting.all_bibtex_fields
+        # for field in fields_in_entry:
+        #     if field not in all_fields:
+        #         all_fields.append(field)
+        #
+        grid_layout = QtGui.QGridLayout()
+        # for field in bib_entry.fields.keys():
+        #     if field.lower() not in all_fields:
+        #         all_fields.append(field)
+
+        for row, field in enumerate(fields_in_entry):
+            data = bib_entry.fields[field]
+
+            label = QtGui.QLabel(field.capitalize() + ': ')
+            line_edit = QtGui.QLineEdit(data)
+            self.edit_fields[field] = line_edit
+            grid_layout.addWidget(label, row, 0)
+            grid_layout.addWidget(line_edit, row, 1)
+
+        return grid_layout
+
+    def recover_entry(self):
+        fields_in_entry = self.original_entry.fields.keys()
+        fields_in_entry += self.original_entry.persons.keys()
+        for field in fields_in_entry:
+            orig_data = self.original_entry.fields[field]
+            self.edit_fields[field].clear()
+            self.edit_fields[field].setText(orig_data)
 
 
 def main():

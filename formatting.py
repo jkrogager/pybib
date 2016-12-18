@@ -24,6 +24,32 @@ journal_transform = {'aj': u'AJ',
                      'aplett': u'Astrophys. Lett.'}
 
 
+all_bibtex_fields = [
+    'author',
+    'title',
+    'journal',
+    'volume',
+    'pages',
+    'year',
+    'month',
+    'number',
+    'series',
+    'note',
+    'booktitle',
+    'chapter',
+    'crossref',
+    'editor',
+    'edition',
+    'institution',
+    'publisher',
+    'school',
+    'organization',
+    'address',
+    'annote',
+    'howpublished'
+]
+
+
 def unicode_char_in_string(string):
     try:
         string.encode('ascii')
