@@ -49,6 +49,12 @@ class Window(QtGui.QMainWindow):
         self.searchContent.setStatusTip("Search in the bibliography content")
         self.searchContent.triggered.connect(self.create_search_window)
 
+        self.editEntry = QtGui.QAction(QtGui.QIcon('icons/edit_content-icon.png'),
+                                       "&Edit Current Entry", self)
+        self.editEntry.setShortcut("Ctrl+E")
+        self.editEntry.setStatusTip("Edit the content of the current entry")
+        self.editEntry.triggered.connect(self.create_edit_window)
+
         self.statusBar()
 
         self.mainMenu = self.menuBar()
@@ -59,9 +65,13 @@ class Window(QtGui.QMainWindow):
         self.fileMenu.addAction(exitAction)
         self.searchMenu = self.mainMenu.addMenu("&Search")
         self.searchMenu.addAction(self.searchContent)
+        self.editMenu = self.mainMenu.addMenu("&Edit")
+        self.editMenu.addAction(self.editEntry)
 
+        # Define empty data containers
         self.search_form_fields = dict()
         self.entryID_list = list()
+        self.bib_database = pybtex.database.BibliographyData()
 
         self.home()
 
@@ -92,6 +102,7 @@ class Window(QtGui.QMainWindow):
         self.toolbar.addAction(openFile)
         self.toolbar.addAction(saveFile)
         self.toolbar.addAction(self.searchContent)
+        self.toolbar.addAction(self.editEntry)
 
         # Search Bar for articles in listView
         self.searchBar = QtGui.QLineEdit()
@@ -189,6 +200,9 @@ class Window(QtGui.QMainWindow):
 
     def create_search_window(self):
         self.Spline_dialog = SearchWindow(self)
+
+    def create_edit_window(self):
+        self.editor = EditWindow(self)
 
     def search_content(self):
         matches = list()
@@ -300,6 +314,9 @@ class Window(QtGui.QMainWindow):
         new_msg = 'Saved current BibTeX database to file: ' + name
         self.statusBar().showMessage(new_msg, 8000)
 
+    def update_entry(self):
+        pass
+
     def download(self):
         self.completed = 0
 
@@ -355,6 +372,35 @@ class SearchWindow(QtGui.QDialog):
         vbox.addLayout(searchGrid)
         vbox.addStretch(1)
         vbox.addLayout(hbox)
+        self.setLayout(vbox)
+
+        self.show()
+
+
+class EditWindow(QtGui.QDialog):
+    def __init__(self, parent=None):
+        super(EditWindow, self).__init__(parent)
+        self.setWindowTitle("Edit Bib Entry")
+        self.save_button = QtGui.QPushButton("Update Entry")
+        self.save_button.clicked.connect(parent.update_entry)
+        self.quit_button = QtGui.QPushButton("Cancel")
+        self.quit_button.clicked.connect(self.close)
+        self.reset_button = QtGui.QPushButton("Recover Original")
+        # self.reset_button.clicked.connect(self.recover_entry)
+
+        entryID = str(parent.listView.currentItem())
+        self.original_entry = self.bib_database.entries[entryID]
+        print entryID
+
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(self.save_button)
+        hbox.addWidget(self.quit_button)
+        hbox.addWidget(self.reset_button)
+
+        vbox = QtGui.QVBoxLayout()
+        vbox.addStretch(1)
+        vbox.addLayout(hbox)
+
         self.setLayout(vbox)
 
         self.show()
