@@ -7,7 +7,7 @@ from PyQt4 import QtGui  # , QtCore
 import pybtex
 import pybtex.database
 
-import bibtex
+import formatting
 
 """
 This is a test app to learn GUI programming in Python using PyQT4
@@ -244,21 +244,21 @@ class Window(QtGui.QMainWindow):
             for i, name in enumerate(self.form_entries):
                 bib_entry = self.bib_database.entries[entryID]
                 if name.lower() == 'author':
-                    field_text = bibtex.format_author_list(bib_entry, showAll=True)
+                    field_text = formatting.format_author_list(bib_entry, showAll=True)
 
                 elif name.lower() in bib_entry.fields.keys():
                     if name.lower() == 'journal':
                         # Convert the LaTeX shorthand to real text:
-                        field_text = bibtex.format_journal_name(bib_entry)
+                        field_text = formatting.format_journal_name(bib_entry)
 
                     elif name.lower() == 'adsurl':
                         urlLink = bib_entry.fields[name.lower()].replace('\n', ' ')
-                        urlText = bibtex.format_reference(bib_entry, 1, 2)
+                        urlText = formatting.format_reference(bib_entry, 1, 2)
                         field_text = "<a href=\"%s\">%s</a>" % (urlLink, urlText)
 
                     else:
                         field_text = bib_entry.fields[name.lower()].replace('\n', ' ')
-                        field_text = bibtex.clean_string(field_text)
+                        field_text = formatting.clean_string(field_text)
 
                 else:
                     field_text = ''
