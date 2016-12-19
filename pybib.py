@@ -133,6 +133,7 @@ class Window(QtGui.QMainWindow):
         self.listView.setFixedWidth(140)
         self.listView.itemClicked.connect(self.show_entry)
         self.listView.currentItemChanged.connect(self.show_entry)
+        self.listView.itemDoubleClicked.connect(self.create_edit_window)
 
         # Collect Search Bar and List View:
         list_panel = QtGui.QVBoxLayout()
