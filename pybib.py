@@ -39,10 +39,11 @@ class Window(QtGui.QMainWindow):
         saveFile.setStatusTip("Save File")
         saveFile.triggered.connect(self.file_save)
 
-        newFile = QtGui.QAction("&New File", self)
-        newFile.setShortcut("Ctrl+N")
-        newFile.setStatusTip("New File")
-        newFile.triggered.connect(self.file_new)
+        self.newEntryManual = QtGui.QAction(QtGui.QIcon('icons/newfile-icon.png'),
+                                            "&Add Manual Entry", self)
+        self.newEntryManual.setShortcut("Ctrl+Shift+N")
+        self.newEntryManual.setStatusTip("Add Manual Entry")
+        self.newEntryManual.triggered.connect(self.create_manual_entry_window)
 
         self.searchContent = QtGui.QAction(QtGui.QIcon('icons/search_content-icon.png'),
                                            "&Search Content", self)
@@ -60,13 +61,13 @@ class Window(QtGui.QMainWindow):
 
         self.mainMenu = self.menuBar()
         self.fileMenu = self.mainMenu.addMenu("&File")
-        self.fileMenu.addAction(newFile)
         self.fileMenu.addAction(openFile)
         self.fileMenu.addAction(saveFile)
         self.fileMenu.addAction(exitAction)
         self.searchMenu = self.mainMenu.addMenu("&Search")
         self.searchMenu.addAction(self.searchContent)
         self.editMenu = self.mainMenu.addMenu("&Edit")
+        self.editMenu.addAction(self.newEntryManual)
         self.editMenu.addAction(self.editEntry)
 
         # Define empty data containers
@@ -88,9 +89,6 @@ class Window(QtGui.QMainWindow):
         exitAction = QtGui.QAction(QtGui.QIcon('icons/quit-icon.png'), "Exit Application", self)
         exitAction.triggered.connect(self.close_application)
 
-        newFile = QtGui.QAction(QtGui.QIcon('icons/newfile-icon.png'), "New File", self)
-        newFile.triggered.connect(self.file_new)
-
         openFile = QtGui.QAction(QtGui.QIcon('icons/open-icon.png'), "Open New File", self)
         openFile.triggered.connect(self.file_open)
 
@@ -99,7 +97,7 @@ class Window(QtGui.QMainWindow):
 
         self.toolbar = self.addToolBar("Tools")
         self.toolbar.addAction(exitAction)
-        self.toolbar.addAction(newFile)
+        self.toolbar.addAction(self.newEntryManual)
         self.toolbar.addAction(openFile)
         self.toolbar.addAction(saveFile)
         self.toolbar.addAction(self.searchContent)
@@ -179,6 +177,12 @@ class Window(QtGui.QMainWindow):
         # self.btn.clicked.connect(self.download)
 
         # self.show()
+
+    def create_manual_entry_window(self):
+        self.creator = EntryWindow(self)
+
+    def add_entry(self):
+        print "Adding New Entry to Bibliography:"
 
     def activate_list(self):
         self.listView.setCurrentRow(0)
@@ -455,6 +459,28 @@ class EditWindow(QtGui.QDialog):
             orig_data = self.original_entry.fields[field]
             self.edit_fields[field].clear()
             self.edit_fields[field].setText(orig_data)
+
+
+class EntryWindow(QtGui.QDialog):
+    def __init__(self, parent=None):
+        super(EntryWindow, self).__init__(parent)
+        self.setWindowTitle("Add New Bib Entry")
+        self.save_button = QtGui.QPushButton("Add Entry")
+        self.save_button.clicked.connect(parent.add_entry)
+        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.close)
+        button_row = QtGui.QHBoxLayout()
+        button_row.addWidget(self.save_button)
+        button_row.addStretch(1)
+        button_row.addWidget(self.cancel_button)
+
+        mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addStretch(1)
+        mainLayout.addLayout(button_row)
+
+        self.setLayout(mainLayout)
+
+        self.show()
 
 
 def main():
