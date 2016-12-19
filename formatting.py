@@ -23,7 +23,6 @@ journal_transform = {'aj': u'AJ',
                      'pasp': u'PASP',
                      'aplett': u'Astrophys. Lett.'}
 
-
 all_bibtex_fields = [
     'author',
     'title',
@@ -46,8 +45,9 @@ all_bibtex_fields = [
     'organization',
     'address',
     'annote',
-    'howpublished'
-]
+    'howpublished']
+
+all_bibtex_types = ['Article', 'Book']
 
 
 def unicode_char_in_string(string):

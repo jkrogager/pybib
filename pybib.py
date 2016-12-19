@@ -4,7 +4,7 @@ import sys
 import time
 import copy
 
-from PyQt4 import QtGui  # , QtCore
+from PyQt4 import QtGui, QtCore
 import pybtex
 import pybtex.database
 
@@ -462,6 +462,13 @@ class EditWindow(QtGui.QDialog):
 
 
 class EntryWindow(QtGui.QDialog):
+    """
+    The window should be a tabbed window with three different pages
+    allowing for different entry mode:
+     - Manual Entry mode
+     - Copy/Paste mode from raw text
+     - URL grabber mode
+    """
     def __init__(self, parent=None):
         super(EntryWindow, self).__init__(parent)
         self.setWindowTitle("Add New Bib Entry")
@@ -474,7 +481,14 @@ class EntryWindow(QtGui.QDialog):
         button_row.addStretch(1)
         button_row.addWidget(self.cancel_button)
 
+        entry_type_line = QtGui.QHBoxLayout()
+        entry_type_line.addWidget(QtGui.QLabel("Entry Type: "))
+        self.new_entry_type = QtGui.QComboBox()
+        self.new_entry_type.addItems(formatting.all_bibtex_types)
+        entry_type_line.addWidget(self.new_entry_type)
+
         mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addLayout(entry_type_line)
         mainLayout.addStretch(1)
         mainLayout.addLayout(button_row)
 
