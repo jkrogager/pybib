@@ -45,6 +45,18 @@ class Window(QtGui.QMainWindow):
         self.newEntryManual.setStatusTip("Add Manual Entry")
         self.newEntryManual.triggered.connect(self.create_manual_entry_window)
 
+        self.newEntryPaste = QtGui.QAction(QtGui.QIcon('icons/newfile-icon.png'),
+                                           "&Add New Entry", self)
+        self.newEntryPaste.setShortcut("Ctrl+N")
+        self.newEntryPaste.setStatusTip("Add New Entry")
+        self.newEntryPaste.triggered.connect(self.create_paste_entry_window)
+
+        self.newEntryURL = QtGui.QAction(QtGui.QIcon('icons/newfile-icon.png'),
+                                         "&Add New Entry from URL", self)
+        self.newEntryURL.setShortcut("Ctrl+Alt+N")
+        self.newEntryURL.setStatusTip("Add New Entry from URL")
+        self.newEntryURL.triggered.connect(self.create_url_entry_window)
+
         self.searchContent = QtGui.QAction(QtGui.QIcon('icons/search_content-icon.png'),
                                            "&Search Content", self)
         self.searchContent.setShortcut("Ctrl+Shift+F")
@@ -68,6 +80,8 @@ class Window(QtGui.QMainWindow):
         self.searchMenu.addAction(self.searchContent)
         self.editMenu = self.mainMenu.addMenu("&Edit")
         self.editMenu.addAction(self.newEntryManual)
+        self.editMenu.addAction(self.newEntryPaste)
+        self.editMenu.addAction(self.newEntryURL)
         self.editMenu.addAction(self.editEntry)
 
         # Define empty data containers
@@ -97,7 +111,7 @@ class Window(QtGui.QMainWindow):
 
         self.toolbar = self.addToolBar("Tools")
         self.toolbar.addAction(exitAction)
-        self.toolbar.addAction(self.newEntryManual)
+        self.toolbar.addAction(self.newEntryPaste)
         self.toolbar.addAction(openFile)
         self.toolbar.addAction(saveFile)
         self.toolbar.addAction(self.searchContent)
@@ -179,10 +193,19 @@ class Window(QtGui.QMainWindow):
         # self.show()
 
     def create_manual_entry_window(self):
-        self.creator = EntryWindow(self)
+        self.creator = EntryWindow(self, 0)
+
+    def create_paste_entry_window(self):
+        self.creator = EntryWindow(self, 1)
+
+    def create_url_entry_window(self):
+        self.creator = EntryWindow(self, 2)
 
     def add_entry(self):
         print "Adding New Entry to Bibliography:"
+
+    def add_entry_url(self, url_string):
+        print "Adding New Entry to Bibliography: " + url_string
 
     def activate_list(self):
         self.listView.setCurrentRow(0)
@@ -461,7 +484,7 @@ class EditWindow(QtGui.QDialog):
             self.edit_fields[field].setText(orig_data)
 
 
-class EntryWindow(QtGui.QDialog):
+class EntryWindow(QtGui.QTabWidget):
     """
     The window should be a tabbed window with three different pages
     allowing for different entry mode:
@@ -469,13 +492,32 @@ class EntryWindow(QtGui.QDialog):
      - Copy/Paste mode from raw text
      - URL grabber mode
     """
-    def __init__(self, parent=None):
-        super(EntryWindow, self).__init__(parent)
+    def __init__(self, parent=None, mode=1):
+        super(EntryWindow, self).__init__()
+        self.setGeometry(150, 150, 500, 400)
+        self.tab1 = QtGui.QWidget()
+        self.tab2 = QtGui.QWidget()
+        self.tab3 = QtGui.QWidget()
+        self.parent = parent
+
+        self.addTab(self.tab1, "Manual Entry")
+        self.addTab(self.tab2, "Paste BibTeX")
+        self.addTab(self.tab3, "Retrieve from URL")
+
+        self.page1()
+        self.page2()
+        self.page3()
         self.setWindowTitle("Add New Bib Entry")
+        self.setCurrentIndex(mode)
+
+        self.show()
+
+    def page1(self):
         self.save_button = QtGui.QPushButton("Add Entry")
-        self.save_button.clicked.connect(parent.add_entry)
+        self.save_button.clicked.connect(self.parent.add_entry)
         self.cancel_button = QtGui.QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.close)
+
         button_row = QtGui.QHBoxLayout()
         button_row.addWidget(self.save_button)
         button_row.addStretch(1)
@@ -492,9 +534,59 @@ class EntryWindow(QtGui.QDialog):
         mainLayout.addStretch(1)
         mainLayout.addLayout(button_row)
 
-        self.setLayout(mainLayout)
+        self.setTabText(0, "Manual BibTeX Entry")
+        self.tab1.setLayout(mainLayout)
 
-        self.show()
+    def page2(self):
+        self.save_button = QtGui.QPushButton("Add Entry")
+        self.save_button.clicked.connect(self.parent.add_entry)
+        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.close)
+
+        button_row = QtGui.QHBoxLayout()
+        button_row.addWidget(self.save_button)
+        button_row.addStretch(1)
+        button_row.addWidget(self.cancel_button)
+
+        entry_input = QtGui.QHBoxLayout()
+        entry_input.addWidget(QtGui.QTextEdit())
+
+        mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addLayout(entry_input)
+        mainLayout.addStretch(1)
+        mainLayout.addLayout(button_row)
+
+        self.setTabText(1, "Paste BibTeX Entry")
+        self.tab2.setLayout(mainLayout)
+
+    def page3(self):
+        self.save_button = QtGui.QPushButton("Add Entry")
+        self.save_button.clicked.connect(self.add_entry_url)
+        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.close)
+
+        button_row = QtGui.QHBoxLayout()
+        button_row.addWidget(self.save_button)
+        button_row.addStretch(1)
+        button_row.addWidget(self.cancel_button)
+
+        entry_input = QtGui.QHBoxLayout()
+        self.URL_input = QtGui.QLineEdit()
+        self.URL_input.returnPressed.connect(self.add_entry_url)
+        entry_input.addWidget(QtGui.QLabel("URL: "))
+        entry_input.addWidget(self.URL_input)
+
+        mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addLayout(entry_input)
+        mainLayout.addStretch(1)
+        mainLayout.addLayout(button_row)
+
+        self.setTabText(2, "Paste BibTeX Entry")
+        self.tab3.setLayout(mainLayout)
+
+    def add_entry_url(self):
+        url_string = str(self.URL_input.text())
+        self.parent.add_entry_url(url_string)
 
 
 def main():
